@@ -1,0 +1,47 @@
+* { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 30px 20px; background: #f8f9fa; color: #222; }
+  .header { background: linear-gradient(135deg, #1a5276, #2e86c1); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; }
+  .header h1 { margin: 0; font-size: 22px; }
+  .header p { margin: 5px 0 0; opacity: .85; font-size: 13px; }
+  .section { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .section h2 { font-size: 16px; color: #1a5276; margin: 0 0 15px; padding-bottom: 8px; border-bottom: 2px solid #1a5276; }
+  .question { margin: 16px 0; padding: 12px; border-radius: 8px; background: #f8fbff; }
+  .question.stem { background: #fff8e1; }
+  .read-text { background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 14px; line-height: 1.7; }
+  .opts { margin: 8px 0; }
+  .opts label { display: block; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: background .15s; }
+  .opts label:hover { background: #e8f0fe; }
+  .opts input[type="radio"] { margin-right: 8px; }
+  .fill-input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 200px; }
+  .fill-input:focus { border-color: #1a5276; outline: none; box-shadow: 0 0 0 2px rgba(26,82,118,.2); }
+  .writing-area { width: 100%; min-height: 120px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; line-height: 1.6; font-family: inherit; resize: vertical; }
+  .writing-area:focus { border-color: #7b1fa2; outline: none; }
+  .play-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; border-radius: 20px; cursor: pointer; font-size: 13px; margin-bottom: 8px; transition: all .15s; }
+  .play-btn:hover { background: #c8e6c9; }
+  .play-btn.playing { background: #fff3cd; border-color: #ffc107; color: #856404; }
+  .play-btn.loading { background: #e3f2fd; border-color: #90caf9; color: #1565c0; }
+  .score-bar { background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; display: none; }
+  .score-bar h2 { margin: 0; font-size: 28px; }
+  .score-bar p { margin: 5px 0 0; font-size: 14px; }
+  .btn-submit { padding: 12px 40px; background: linear-gradient(135deg, #1a5276, #2e86c1); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+  .btn-submit:hover { opacity: .9; }
+  .btn-reset { padding: 10px 30px; background: white; color: #666; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; cursor: pointer; margin-left: 10px; }
+  .feedback { display: none; margin-top: 8px; padding: 6px 10px; border-radius: 4px; font-size: 13px; }
+  .feedback.correct { background: #e8f5e9; color: #2e7d32; display: block; }
+  .feedback.wrong { background: #ffebee; color: #c62828; display: block; }
+  .hint { font-size: 12px; color: #888; margin-left: 4px; }
+  .section-score { margin-top: 10px; padding: 8px; background: #f5f5f5; border-radius: 6px; text-align: right; font-size: 13px; color: #666; display: none; }
+  .detail-table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 13px; }
+  .detail-table th, .detail-table td { padding: 8px 12px; border: 1px solid #ddd; text-align: left; }
+  .detail-table th { background: #f0f0f0; }
+  .detail-table .pass { color: #2e7d32; font-weight: bold; }
+  .detail-table .fail { color: #c62828; font-weight: bold; }
+  .ref-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .ref-table th, .ref-table td { padding: 6px 8px; border: 1px solid #e0e0e0; text-align: left; }
+  .ref-table th { background: #f5f5f5; font-weight: 500; }
+  .ref-table tr.ref-corr td { background: #f1f8e9; }
+  .ref-table tr.ref-wrong td { background: #fff3f0; }
+
+.script-btn { padding: 3px 10px; background: #fff8e1; border: 1px solid #ffc107; border-radius: 16px; cursor: pointer; font-size: 11px; vertical-align: middle; margin-left: 4px; }
+.script-btn:hover { background: #ffecb3; }
+.script-text { margin-top: 8px; padding: 10px; background: #fff8e1; border-radius: 6px; font-size: 13px; line-height: 1.6; border-left: 3px solid #ffc107; }

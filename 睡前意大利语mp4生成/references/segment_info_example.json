@@ -1,0 +1,17 @@
+[
+  [1, "句1意语常速", "Lieto di conoscerti.", 2.5, "it_female", 1.0],
+  [2, "句1中文", "很高兴认识你。（男性说）", 2.5, "cn_female", 1.0],
+  [3, "句1意语慢速", "Lieto di conoscerti.", 4.0, "it_female", 0.68],
+  [4, "句2意语常速", "Che Vergogna!", 1.8, "it_female", 1.0],
+  [5, "句2中文", "真丢脸！", 1.5, "cn_female", 1.0],
+  [6, "句2意语慢速", "Che Vergogna!", 3.0, "it_female", 0.68],
+  [7, "句3意语常速", "Quanto costa?", 1.8, "it_female", 1.0],
+  [8, "句3中文", "多少钱？", 1.5, "cn_female", 1.0],
+  [9, "句3意语慢速", "Quanto costa?", 3.0, "it_female", 0.68],
+  [10, "句4意语常速", "Mi dispiace.", 2.0, "it_female", 1.0],
+  [11, "句4中文", "对不起。", 1.5, "cn_female", 1.0],
+  [12, "句4意语慢速", "Mi dispiace.", 3.5, "it_female", 0.68],
+  [13, "句5意语常速", "È tardi.", 1.5, "it_female", 1.0],
+  [14, "句5中文", "晚了。", 1.2, "cn_female", 1.0],
+  [15, "句5意语慢速", "È tardi.", 2.5, "it_female", 0.68]
+]

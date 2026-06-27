@@ -1,0 +1,18 @@
+{
+  "name": "canvas-design（视觉设计）",
+  "installedAt": 1780114782684,
+  "source": "marketplace",
+  "version": "1.0.4",
+  "skillId": "skill_2053081626394972160",
+  "examples_zh": [
+    "设计一张赛博朋克风格的海报",
+    "制作一张活动宣传图（PNG格式）",
+    "设计一组社交媒体图片素材"
+  ],
+  "examples_en": [
+    "Design a cyberpunk-style poster",
+    "Create an event promotional image in PNG format",
+    "Design a set of social media images"
+  ],
+  "iconSource": "letter:auto"
+}

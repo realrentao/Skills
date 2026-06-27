@@ -1,0 +1,354 @@
+var _audioCtx = null;
+function _getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+
+function _stopCurrent() {
+  if (window._curSource) {
+    try { _curSource.stop(); } catch(e) {}
+    window._curSource = null;
+  }
+  if (window._curBtn) {
+    window._curBtn.classList.remove('playing');
+    window._curBtn.innerHTML = '▶ Ascolta';
+    window._curBtn = null;
+  }
+}
+
+var _audioGen = 0;
+
+function playAudio(btn) {
+  var src = btn.getAttribute('data-audio-src');
+  if (!src) { console.error('No audio source'); return; }
+  
+  // If this button is already playing, stop it
+  if (btn.classList.contains('playing')) { _stopCurrent(); return; }
+  
+  // Stop previous and mark this as latest
+  _stopCurrent();
+  var myGen = ++_audioGen;
+  
+  btn.classList.add('loading');
+  btn.innerHTML = '⏳...';
+  
+  fetch(src)
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.arrayBuffer();
+    })
+    .then(function(buf) {
+      if (myGen !== _audioGen) return;  // Another button was clicked, discard
+      var ctx = _getAudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+      ctx.decodeAudioData(buf, function(buffer) {
+        if (myGen !== _audioGen) return;  // Check again after decode
+        var source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+        window._curSource = source;
+        window._curBtn = btn;
+        btn.classList.remove('loading');
+        btn.classList.add('playing');
+        btn.innerHTML = '⏹ Ferma';
+        source.onended = function() { _stopCurrent(); };
+      }, function(err) {
+        console.error('Decode failed:', err);
+        btn.classList.remove('loading');
+        btn.innerHTML = '❌';
+        setTimeout(function() { btn.innerHTML = '▶ Riprova'; }, 2000);
+      });
+    })
+    .catch(function(err) {
+      console.error('Fetch failed:', err);
+      btn.classList.remove('loading');
+      btn.innerHTML = '❌';
+      setTimeout(function() { btn.innerHTML = '▶ Riprova'; }, 2000);
+    });
+}
+
+function normalize(s) {
+  return s.toLowerCase().replace(/[\s'´\`‘’\.]+/g, ' ').trim();
+}
+
+function keywordScore(text, keywords) {
+  if (!text || text.trim().length < 10) return 0;
+  var t = text.toLowerCase();
+  var found = 0;
+  for (var k of keywords) {
+    if (t.includes(k.toLowerCase())) found++;
+  }
+  var total = keywords.length;
+  var ratio = found / total;
+  if (ratio >= 0.6) return 20;
+  if (ratio >= 0.4) return 15;
+  if (ratio >= 0.2) return 10;
+  if (found > 0) return 5;
+  return 0;
+}
+
+function wordCount(text) {
+  return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+}
+
+// Preload first audio silently
+(function() {
+  var firstAudio = document.querySelector('[data-audio-src]');
+  if (firstAudio) {
+    var src = firstAudio.getAttribute('data-audio-src');
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', src, true);
+    xhr.responseType = 'arraybuffer';
+    xhr.send();
+  }
+})();
+
+function submitExam() {
+  var total = 0;
+  var maxTotal = 0;
+  var details = [];
+  var detailIdx = 0;
+  
+  // Score each section
+  var sections = document.querySelectorAll('.section');
+  sections.forEach(function(sec) {
+    var sectionTotal = 0;
+    var sectionMax = 0;
+    var sectionItems = 0;
+    var secName = sec.querySelector('h2').textContent.replace(/\(max.*?\)/, '').trim();
+    
+    // Multiple choice (listen/read)
+    var choiceQs = sec.querySelectorAll('.question[data-type="listen"], .question[data-type="read"]');
+    choiceQs.forEach(function(q) {
+      var ansIdx = parseInt(q.dataset.ans);
+      var pts = parseInt(q.dataset.points) || 4;
+      var selected = q.querySelector('input[type="radio"]:checked');
+      var fb = q.querySelector('.feedback');
+      var qtext = q.querySelector('.question-text') ? q.querySelector('.question-text').textContent.trim() : '';
+      // Get all option texts
+      var opts = q.querySelectorAll('.opts label');
+      var optTexts = [];
+      opts.forEach(function(o) { optTexts.push(o.textContent.trim()); });
+      var correctAns = optTexts[ansIdx] || ('Opzione ' + (ansIdx+1));
+      var userAns = selected ? optTexts[parseInt(selected.value)] : '(Non risposto)';
+      
+      sectionMax += pts;
+      maxTotal += pts;
+      sectionItems++;
+      var correct = false;
+      if (selected) {
+        var val = parseInt(selected.value);
+        if (val === ansIdx) {
+          sectionTotal += pts;
+          total += pts;
+          correct = true;
+          fb.className = 'feedback correct';
+          fb.textContent = '✓ Corretto! (' + pts + '/' + pts + ' pt)';
+        } else {
+          fb.className = 'feedback wrong';
+          fb.textContent = '✗ Hai risposto: ' + userAns + '. Corretta: ' + correctAns + ' (0/' + pts + ' pt)';
+        }
+      } else {
+        fb.className = 'feedback wrong';
+        fb.textContent = '⚠ Non risposto. Corretta: ' + correctAns + ' (0/' + pts + ' pt)';
+      }
+      details.push({sec: secName, num: detailIdx+1, q: qtext, user: userAns, correct: correctAns, status: correct ? '✓' : '✗', pts: correct ? pts : 0, maxPts: pts});
+      detailIdx++;
+    });
+    
+    // Fill-in grammar
+    var fillQs = sec.querySelectorAll('.question[data-type="fill"]');
+    fillQs.forEach(function(q) {
+      var ans = q.dataset.ans.split(',').map(s => normalize(s));
+      var pts = parseInt(q.dataset.points) || 3;
+      var input = q.querySelector('input[type="text"]');
+      var fb = q.querySelector('.feedback');
+      var qtext = q.textContent.replace(/\s+/g, ' ').trim().substring(0, 80);
+      var userAns = (input && input.value.trim()) ? input.value.trim() : '(Non risposto)';
+      var correctAns = q.dataset.ans;
+      
+      sectionMax += pts;
+      maxTotal += pts;
+      sectionItems++;
+      var correct = false;
+      if (input && input.value.trim()) {
+        var userAnsNorm = normalize(input.value);
+        for (var a of ans) {
+          if (userAnsNorm === a || userAnsNorm.includes(a) || a.includes(userAnsNorm)) {
+            correct = true;
+            break;
+          }
+        }
+        if (correct) {
+          sectionTotal += pts;
+          total += pts;
+          fb.className = 'feedback correct';
+          fb.textContent = '✓ Corretto! (' + pts + '/' + pts + ' pt)';
+        } else {
+          fb.className = 'feedback wrong';
+          fb.textContent = '✗ Hai scritto: ' + userAns + '. Corretta: ' + correctAns + ' (0/' + pts + ' pt)';
+        }
+      } else {
+        fb.className = 'feedback wrong';
+        fb.textContent = '⚠ Non risposto. Corretta: ' + correctAns + ' (0/' + pts + ' pt)';
+      }
+      details.push({sec: secName, num: detailIdx+1, q: qtext.substring(0,60), user: userAns, correct: correctAns, status: correct ? '✓' : '✗', pts: correct ? pts : 0, maxPts: pts});
+      detailIdx++;
+    });
+    
+    // Writing
+    var writeQs = sec.querySelectorAll('.question[data-type="write"]');
+    writeQs.forEach(function(q) {
+      var ta = q.querySelector('textarea');
+      var pts = 20;
+      sectionMax += pts;
+      maxTotal += pts;
+      sectionItems++;
+      var qtext = q.textContent.replace(/\s+/g, ' ').trim().substring(0, 80);
+      if (ta) {
+        var text = ta.value;
+        var wc = wordCount(text);
+        var userAns = text ? text.substring(0, 80) + (text.length > 80 ? '...' : '') : '(Vuoto)';
+        try {
+          var keys = JSON.parse(ta.dataset.keywords);
+          var ks = keywordScore(text, keys);
+          var lenBonus = Math.min(wc, 100) / 100 * 5;
+          var score = Math.min(ks + lenBonus, 20);
+          sectionTotal += score;
+          total += score;
+          var keyStr = keys.join(', ');
+          details.push({sec: secName, num: detailIdx+1, q: qtext.substring(0,50), user: userAns, correct: 'Parole chiave: ' + keyStr.substring(0,60), status: score >= 12 ? '✓' : '△', pts: Math.round(score), maxPts: pts});
+        } catch(e) {
+          sectionTotal += 0; total += 0;
+          details.push({sec: secName, num: detailIdx+1, q: qtext.substring(0,50), user: userAns, correct: '(consultare il docente)', status: '?', pts: 0, maxPts: pts});
+        }
+      }
+      detailIdx++;
+    });
+    
+    // Speaking (text)
+    var speakQs = sec.querySelectorAll('.question[data-type="speak"]');
+    speakQs.forEach(function(q) {
+      var ta = q.querySelector('textarea');
+      var pts = 20;
+      sectionMax += pts;
+      maxTotal += pts;
+      sectionItems++;
+      var qtext = q.textContent.replace(/\s+/g, ' ').trim().substring(0, 80);
+      if (ta) {
+        var text = ta.value;
+        var wc = wordCount(text);
+        var userAns = text ? text.substring(0, 80) + (text.length > 80 ? '...' : '') : '(Vuoto)';
+        try {
+          var keys = JSON.parse(ta.dataset.keywords);
+          var ks = keywordScore(text, keys);
+          var lenBonus = Math.min(wc, 80) / 80 * 5;
+          var score = Math.min(ks + lenBonus, 20);
+          sectionTotal += score;
+          total += score;
+          var keyStr = keys.join(', ');
+          details.push({sec: secName, num: detailIdx+1, q: qtext.substring(0,50), user: userAns, correct: 'Parole chiave: ' + keyStr.substring(0,60), status: score >= 12 ? '✓' : '△', pts: Math.round(score), maxPts: pts});
+        } catch(e) {
+          sectionTotal += 0; total += 0;
+          details.push({sec: secName, num: detailIdx+1, q: qtext.substring(0,50), user: userAns, correct: '(consultare il docente)', status: '?', pts: 0, maxPts: pts});
+        }
+      }
+      detailIdx++;
+    });
+    
+    // Show section score
+    var secScore = sec.querySelector('.section-score');
+    if (secScore) {
+      secScore.style.display = 'block';
+      var pct = sectionMax > 0 ? Math.round(sectionTotal / sectionMax * 100) : 0;
+      secScore.textContent = 'Sezione: ' + Math.round(sectionTotal) + '/' + sectionMax + ' (' + pct + '%)';
+    }
+  });
+  
+  // Overall score
+  var pct = maxTotal > 0 ? Math.round(total / maxTotal * 100) : 0;
+  var scoreBar = document.getElementById('scoreBar');
+  scoreBar.style.display = 'block';
+  document.getElementById('totalScore').textContent = Math.round(total) + '/' + maxTotal;
+  
+  var msg = '';
+  if (pct >= 85) msg = "🟢 Eccellente! Livello raggiunto brillantemente. Sei pronto per l'esame vero!";
+  else if (pct >= 70) msg = "🔵 Buono! Hai una solida preparazione. Rivedi gli errori per perfezionarti.";
+  else if (pct >= 55) msg = "🟡 Discreto. Sei sulla buona strada, ma devi studiare di più alcune aree.";
+  else if (pct >= 40) msg = "🟠 Insufficiente. Ti consiglio di ripassare le basi e riprovare.";
+  else msg = "🔴 Molto insufficiente. Hai bisogno di studiare molto prima di affrontare l'esame.";
+  document.getElementById('scoreMessage').textContent = msg + ' (Punteggio: ' + pct + '%)';
+  
+  // Show answer reference table
+  var refDiv = document.getElementById('answerReference');
+  if (!refDiv) {
+    refDiv = document.createElement('div');
+    refDiv.id = 'answerReference';
+    refDiv.className = 'section';
+    document.querySelector('.btn-submit').parentNode.parentNode.appendChild(refDiv);
+  }
+  refDiv.style.display = 'block';
+  refDiv.innerHTML = '<h2>📋 Riepilogo risposte</h2>';
+  
+  if (details.length > 0) {
+    var table = '<table class="ref-table"><thead><tr><th>#</th><th>Domanda</th><th>La tua risposta</th><th>Risposta corretta</th><th>Esito</th><th>Punti</th></tr></thead><tbody>';
+    for (var d of details) {
+      var cls = d.status === '✓' ? 'ref-corr' : (d.status === '?' ? '' : 'ref-wrong');
+      table += '<tr class="' + cls + '"><td>' + d.num + '</td><td>' + d.q.substring(0,45) + '</td><td>' + d.user.substring(0,40) + '</td><td>' + d.correct.substring(0,60) + '</td><td>' + d.status + '</td><td>' + Math.round(d.pts) + '/' + d.maxPts + '</td></tr>';
+    }
+    table += '</tbody></table>';
+    refDiv.innerHTML += table;
+    
+    // Summary
+    var corrCount = details.filter(function(d) { return d.status === '✓'; }).length;
+    var partCount = details.filter(function(d) { return d.status === '△'; }).length;
+    refDiv.innerHTML += '<p style="margin-top:12px;font-size:13px;color:#666;">✓ Corrette: ' + corrCount + ' · △ Parziali: ' + partCount + ' · ✗ Errate: ' + (details.length - corrCount - partCount) + ' · Totale: ' + details.length + ' domande</p>';
+  }
+  
+  // Sound effect
+  try {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = pct >= 70 ? 880 : 440;
+    osc.connect(ctx.destination);
+    osc.start();
+    setTimeout(function() { osc.stop(); }, 300);
+  } catch(e) {}
+  
+  window.scrollTo(0, 0);
+}
+
+function resetExam() {
+  if (!confirm('Sei sicuro di voler ricominciare? Tutte le risposte verranno cancellate.')) return;
+  document.querySelectorAll('input[type="radio"]').forEach(function(r) { r.checked = false; });
+  document.querySelectorAll('input[type="text"]').forEach(function(i) { i.value = ''; });
+  document.querySelectorAll('textarea').forEach(function(t) { t.value = ''; });
+  document.querySelectorAll('.feedback').forEach(function(f) { f.className = 'feedback'; f.textContent = ''; });
+  document.querySelectorAll('.section-score').forEach(function(s) { s.style.display = 'none'; });
+  document.getElementById('scoreBar').style.display = 'none';
+  var ref = document.getElementById('answerReference');
+  if (ref) ref.style.display = 'none';
+}
+function showScript(btn) {
+  var qDiv = btn.closest('.question.stem') || btn.parentElement;
+  if (!qDiv) return;
+  var scriptText = qDiv.getAttribute('data-script');
+  if (!scriptText) return;
+  var existing = qDiv.querySelector('.script-text');
+  if (!existing) {
+    existing = document.createElement('div');
+    existing.className = 'script-text';
+    existing.style.display = 'none';
+    btn.parentNode.insertBefore(existing, btn.nextSibling);
+  }
+  if (existing.style.display === 'none' || !existing.textContent) {
+    existing.textContent = scriptText;
+    existing.style.display = 'block';
+    btn.textContent = 'Nascondi testo';
+  } else {
+    existing.style.display = 'none';
+    btn.textContent = 'Testo';
+  }
+}
