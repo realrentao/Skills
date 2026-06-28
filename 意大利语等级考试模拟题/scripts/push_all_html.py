@@ -2,7 +2,7 @@
 """Push ALL HTML files to GitHub - final fix"""
 import base64, json, urllib.request, os, time
 
-TOKEN = "${GITHUB_TOKEN}"
+TOKEN = os.environ.get("GITHUB_TOKEN", "")
 OWNER = "realrentao"
 REPO = "italiano-esami"
 LOCAL = r"D:\workbuddy工作区\2026-06-10-13-51-52\italiano-esami"

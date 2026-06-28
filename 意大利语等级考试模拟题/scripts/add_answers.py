@@ -7,7 +7,7 @@ import os, re, base64, json, urllib.request, time, sys
 
 REPO = r"D:\workbuddy工作区\2026-06-10-13-51-52\italiano-esami"
 LEVELS = ["A1","A2","B1","B2","C1","C2"]
-TOKEN = '${GITHUB_TOKEN}'
+TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
 # Reference answers for scrittura and orale (generated from keywords)
 # Format: {level: {section: [(keywords, reference), ...]}}

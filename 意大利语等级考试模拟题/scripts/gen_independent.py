@@ -9,7 +9,7 @@ import cils_data, celi_data
 REPO = r"D:\workbuddy工作区\2026-06-10-13-51-52\italiano-esami"
 LEVELS = ["A1","A2","B1","B2","C1","C2"]
 LV_NAMES = {"A1":"Base","A2":"Elementare","B1":"Intermedio","B2":"Intermedio-Avanzato","C1":"Avanzato","C2":"Padronanza"}
-TOKEN = '${GITHUB_TOKEN}'
+TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
 CSS = """*{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Lato',sans-serif;background:#FDF8F3;color:#2C1810}

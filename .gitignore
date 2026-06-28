@@ -1,0 +1,14 @@
+# WorkBuddy system backup files
+*.fallback.bak
+
+# WorkBuddy migration files
+_bm_skillid_migration.json
+_bm_skillid_migration.json.fallback.bak
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db

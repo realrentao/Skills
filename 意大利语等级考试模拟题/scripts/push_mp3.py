@@ -2,7 +2,7 @@
 """Push MP3 files to GitHub - the key to working audio"""
 import os, base64, json, urllib.request, time, glob
 
-TOKEN = "${GITHUB_TOKEN}"
+TOKEN = os.environ.get("GITHUB_TOKEN", "")
 OWNER = "realrentao"
 REPO = "italiano-esami"
 LOCAL = r"D:\workbuddy工作区\2026-06-10-13-51-52\italiano-esami"

@@ -263,7 +263,7 @@ with open(os.path.join(REPO, "index.html"), "w", encoding="utf-8") as f:
 print("Nav generated")
 
 # Push to GitHub
-TOKEN='${GITHUB_TOKEN}'
+TOKEN=os.environ.get('GITHUB_TOKEN','')
 pushed = 0
 for cert in ["CILS", "CELI"]:
     for lv in LEVELS:

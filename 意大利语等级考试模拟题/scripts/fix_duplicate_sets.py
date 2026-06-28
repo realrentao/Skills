@@ -11,7 +11,7 @@ import cils_data, celi_data
 
 REPO = r"D:\workbuddy工作区\2026-06-10-13-51-52\italiano-esami"
 LEVELS = ["A1","A2","B1","B2","C1","C2"]
-TOKEN = '${GITHUB_TOKEN}'
+TOKEN = os.environ.get('GITHUB_TOKEN', '')
 
 # ── Extra ascolto items to add ──
 # Each has: (question, "opt1|opt2|opt3|opt4", answer_index, "script_text")

@@ -156,7 +156,7 @@ for cert, data in [("CILS", cd.CILS), ("CELI", ced.CELI)]:
 print(f"HTML regenerated: {count} pages")
 
 # Push to GitHub
-TOKEN = '${GITHUB_TOKEN}'
+TOKEN = os.environ.get('GITHUB_TOKEN', '')
 pushed = 0
 for cert in ["CILS", "CELI"]:
     for lv in LEVELS:

@@ -60,12 +60,37 @@ project/
     ],
     "exercise_q": [                   # 练习题
         {"question": "...", "options": ["A", "B", "C", "D"], "answer": "C"},
-        {"question": "...", "fill": ["正确答案"]},  # 单空
-        # 多空填空题（用 / 分隔）：
-        {"question": "...", "fill": ["parola1", "parola2", "parola3"]}
+        {"question": "...", "fill": ["正确答案"]},               # 单空填空题
+        {"question": "...", "fill": ["parola1", "parola2"]},     # 双空填空题
+        {"question": "...", "fill": ["parola1", "parola2", "parola3", "parola4"]}  # 四空填空题
     ]
 }
 ```
+
+### 填空题规则（重要！）
+
+`fill` 是一个列表，**每个元素对应一个独立的输入框**：
+
+- ✅ 正确：`"fill": ["ogni", "morte", "di", "papa"]` → 生成4个输入框，分别填4个词
+- ❌ 错误：`"fill": ["ogni, morte, di, papa"]` → 只有1个元素，只生成1个输入框
+- ❌ 错误：`"fill": ["ogni, morte, di, papa"]` 不会自动拆分逗号
+
+**题目文本中的空格数必须与 fill 列表长度一致**：
+```python
+# 4个空 → fill列表4个元素
+{"question": "Completa: Lo vedo ___ ___ ___ ___ .", "fill": ["ogni", "morte", "di", "papa"]}
+# 3个空 → fill列表3个元素
+{"question": "Completa: Mi ___ un ___ della ___ .", "fill": ["costa", "occhio", "testa"]}
+# 2个空 → fill列表2个元素
+{"question": "Completa: Non ascoltarlo, lui ___ a ___.", "fill": ["parla", "vanvera"]}
+# 1个空 → fill列表1个元素
+{"question": "Completa: Fa ___ oggi.", "fill": ["freddo"]}
+```
+
+HTML生成逻辑（generate_html.py）：
+- 每个 `fill[i]` 生成一个 `<input id="fill-input-{exercise_id}-{i}">`
+- 评判时逐个比较：忽略大小写、标点，只比较单词拼写
+- 4个空全对才显示"✅ 正确！"
 
 ## 工作流程
 
